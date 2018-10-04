@@ -13,6 +13,11 @@ module.exports = {
     filename: 'output.js',
     path: path.resolve(__dirname)
   },
+//   entry: './webpack_entry.py',
+//   output: {
+//     filename: 'todos.js',
+//     path: path.resolve(__dirname, 'todos/static')
+//   },  
   module: {
     rules: [
       { test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/, loader: 'url-loader?limit=10000&mimetype=application/font-woff' },

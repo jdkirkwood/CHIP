@@ -1,4 +1,5 @@
 from django import forms
+from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
@@ -8,6 +9,8 @@ from chp.pyreact import (
     context_middleware, inject_ids, render_element
 )
 from chp.store import (create_store, Inject_ast_into_DOM, render_app)
+
+from chp.mdc.components import *
 
 from .components import (
     MdcCheckbox, MdcDateField, MdcTextField)
@@ -26,13 +29,6 @@ class PostForm(forms.ModelForm):
         }
 
     def FormSchema(self, *args, **kwargs):
-        # store_name = "todoStore"
-        # store_change_cb = [
-        #     render_app(store_name, store_content_json),
-        # ]
-        # 
-        # def add_todos():
-        #     return f"store_updates.add_todo({store_name})"
 
         def render(self, *args, **kwargs):
 
@@ -48,24 +44,16 @@ class PostForm(forms.ModelForm):
                         ],
                     ),
                 ])
-            ])
-
-            return Div(
-                [],
-                [
-                    # Script(create_store(store_name,
-                    #                     store_change_cb,
-                    #                     store_content_json)),
-                    form,
-                    # Div([], todos),
                 ],
-            )
+                action=reverse('blog:post_create'))
+
+            return form
 
         return render(self)
 
     def render(self):
 
-        ctx = {}  # perhaps a hidden field on the form?
+        ctx = {}
 
         ast = self.FormSchema()
         form = inject_ids(ast, context_middleware(ctx))

@@ -5,8 +5,9 @@ from django.utils.html import conditional_escape, format_html
 from django.utils.safestring import mark_safe
 from django.utils.translation import gettext_lazy as _
 
-from chp.components import *
+# from chp.components import *
 from chp.store import (create_store, render_app)
+from chp.mdc.components import *
 
 
 """
@@ -82,29 +83,16 @@ class ChpWidgetMixin:
 class MdcCheckboxInput(ChpWidgetMixin, CheckboxInput):
 
     def chp_render(self, context):
-        props = [
-            cp("class", "mdc-checkbox"),
-            cp("data-mdc-auto-init", "MDCCheckbox"),
-        ]
-        children = [
-            ce("input", [
-                cp("id", context['widget']['attrs']['id']),
-                cp("type", context['widget']['type']),
-                cp("class", "mdc-checkbox__native-control"),
-                cp("checked"
-                   if context['widget']['attrs']['checked'] else "", ""),
-                ],
-                []
-               ),
-            Div([cp("class", "mdc-checkbox__background")],
-                []
-                ),
-        ]
-        checkbox = Div(props, children)
-        children = [checkbox,
+        ast_checkbox = Checkbox(
+            context['widget']['attrs']['checked'],
+            context['widget']['attrs']['id'],
+            context
+            )
+
+        children = [ast_checkbox,
                     MdcLabelWidget(context)
                     ]
-        return MdcFormField([], children)
+        return FormField(children)
 
 
 def MdcCheckbox(field):
@@ -120,105 +108,70 @@ def MdcCheckbox(field):
     return field.as_widget(MdcCheckboxInput(label=label))
 
 
-def MdcFormField(props, children):
-    props = [
-        cp("class", "mdc-form-field mdc-form-field--align-end"),
-        cp("data-mdc-auto-init", "MDCFormField"),
-    ]
-    return Div(props, children)
-
-
 def MdcInput(field):
     if field.mdc_type == "MDCDateField":
         input_type = "date"
     else:
         input_type = "text"
 
-    props = [
-        cp("type", input_type),
-        cp("id", field.auto_id),
-        cp("class", "mdc-text-field__input"),
-    ]
+    ast = Input(input_type, field.auto_id)
 
     # widget formatted value
     value = field.field.widget.format_value(field.value())
     if not (value == '' or value is None):
-        props.append(
+        ast["props"].append(
             cp("value", value)
         )
     # widget-level attrs
     for (key, value) in field.field.widget.attrs.items():
-        props.append(
+        ast["props"].append(
             cp(key, value)
         )
 
-    children = []
-    return ce("input", props, children)
+    return ast
 
 
-def MdcLabel(field):
-    props = [
-        cp("for", field.id_for_label),
-    ]
-    if field.mdc_type not in ['MDCCheckbox']:
-        props.append(cp("class", "mdc-floating-label"))
-
+def DjLabel(field):
     label = field.label
     # cast gettext_lazy strings so they are recognised by AST renderer
     if isinstance(label, Promise):
         label = conditional_escape(label)
 
-    return ce("label", props, label)
+    context = {
+        "input_type": field.field.widget.input_type,
+        "id_for_label": field.id_for_label,
+        "label": label,
+    }
+
+    return Label(label, context["id_for_label"], context)
 
 
 def MdcLabelWidget(context):
-    props = [
-        cp("for", context['widget']['id_for_label']),
-    ]
-    if context['widget']['type'] not in ['checkbox']:
-        props.append(cp("class", "mdc-floating-label"))
-
     label = context['widget']['label']
     # render gettext_lazy strings so they are recognised by AST renderer
     if isinstance(label, Promise):
         label = str(label)
 
-    return ce("label", props, label)
+    el_for = context['widget']['id_for_label']
+    el_context = {}
+    el_context["input_type"] = context['widget']['type']
 
-
-def MdcLineRipple():
-    return Div([cp("class", "mdc-line-ripple")], [])
+    return Label(label, el_for, el_context)
 
 
 def MdcTextField(field):
     if not hasattr(field, 'mdc_type'):
         field.mdc_type = 'MDCTextField'
-    # ctx = field.field.widget.get_context(field.name, field.value(), None)
 
-    props = [
-        cp("class", "mdc-text-field"),
-        cp("data-mdc-auto-init", "MDCTextField"),
-    ]
     children = [
         MdcInput(field),
-        MdcLabel(field),
-        MdcLineRipple(),
+        DjLabel(field),
+        LineRipple(),
     ]
-    textfield = Div(props, children)
-    children = [textfield,
-                MdcLabel(field)
-                ]
-    return MdcFormField([], children)
+    return InputField(field.field.widget.input_type, children)
 
 
 def MdcDateField(field):
     if not hasattr(field, 'mdc_type'):
         field.mdc_type = 'MDCDateField'
     return MdcTextField(field)
-
-
-def SubmitButton(name, on_click):
-    props = [
-        cp('onclick', on_click)
-    ]
-    return Button(props, name)

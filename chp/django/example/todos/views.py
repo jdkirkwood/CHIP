@@ -34,8 +34,7 @@ class TodosView(generic.TemplateView):
             ]
         }
         ast = FormSchema(store, json.dumps(store))
-        form = inject_ids(ast, context_middleware(ctx))
-#         app = Inject_ast_into_DOM(form, json.dumps(form))
-#         html = render_element(app, context_middleware(ctx))
-        html = render_element(form, context_middleware(ctx))
+        form = inject_ids(ast)
+        app = Inject_ast_into_DOM(form, json.dumps(form))
+        html = render_element(app, context_middleware(ctx))
         return mark_safe(html)

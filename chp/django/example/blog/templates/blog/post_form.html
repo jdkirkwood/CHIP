@@ -9,8 +9,12 @@
     {% csrf_token %}
     
     {{ form }}
+    
+    </form>
 
     {{ form.render }}
+    
+    <form action="{% url 'blog:post_create' %}" method="post">
 
     <div class="mdc_layout_grid__cell">
     <div style="display: flex;">
@@ -60,6 +64,7 @@
     </div>
     </div>
     </div>
+    </form>
     {# {{ form.render }} #}
     <script type="text/javascript" src="{% static "output.js" %}"></script>
     <script>window.mdc.autoInit();</script>
